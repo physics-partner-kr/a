@@ -66,6 +66,18 @@ body{
   padding:3px 8px;border-radius:7px;}
 .member .ms{font-size:17px;color:#5f7382;margin-top:4px;line-height:1.4;word-break:keep-all;}
 .member+.member{border-top:1px solid #e2e7ea;}
+
+/* 말하는 중 표시 */
+.row.speaking .pfp{box-shadow:0 0 0 4px #2f6d57, 0 2px 8px rgba(0,0,0,.25);
+  animation:talk .7s ease-in-out infinite;}
+@keyframes talk{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+.toast{
+  position:absolute;left:50%;bottom:92px;transform:translateX(-50%) translateY(12px);
+  background:rgba(20,40,33,.94);color:#dff5e9;font-size:17px;line-height:1.5;
+  padding:12px 18px;border-radius:14px;max-width:80%;text-align:center;
+  opacity:0;pointer-events:none;transition:.3s;z-index:7;word-break:keep-all;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 .kbar{
   background:#8ba6ba;padding:16px 22px;
   display:flex;align-items:center;gap:13px;
@@ -154,11 +166,13 @@ body{
   </div>
   <div class="controls">
     <button class="btn main" id="next">대화 시작 ▶</button>
+    <button class="btn sub" id="tts">🔇 소리</button>
     <button class="btn sub" id="auto">자동</button>
     <button class="btn sub" id="back">이전</button>
     <button class="btn sub" id="reset">처음</button>
   </div>
 
+  <div class="toast" id="toast"></div>
   <div class="scrim" id="scrim"></div>
   <aside class="drawer" id="drawer" aria-hidden="true">
     <div class="dhead">
@@ -177,24 +191,20 @@ const WHO={
   chloro:{name:"엽록체",pic:PF.chloro,me:false,
         bio:"빛 받아서 포도당 만듦. 남는 건 녹말로 저장. 산소는 덤"},
   mito:{name:"마이토콘드리아",pic:PF.mito,me:false,
-        bio:"포도당+산소를 이용해 ATP를 만듦. 이산화탄소랑 물도 생김"}
+        bio:"포도당+산소 받아서 ATP로 바꿔줌. 이산화탄소랑 물이 남음"}
 };
 
 const SCRIPT=[
- {w:"cell",  t:"아놔 지금 [[세포분열|b]]도 해야되고, 그거 또 [[성장|b]]까지 시킬라면 [[에너지|b]] 필요한데;", time:"오후 2:03"},
- {w:"mito",  t:"아 그럼 [[포도당|g]] 나한테 가져오삼. 내가 너 쓸 수 있게 [[ATP|b]]로 만들어줄게.", time:"오후 2:03"},
- {w:"cell",  t:"오ㅋㅋ ㅇㅋㅇㅋ", time:"오후 2:04"},
- {w:"cell",  t:"[[엽록체|g]]야 [[광합성|g]] 하느라 수고가 많다. 지금 만들고 있는 [[포도당|g]]이랑 전에 저장했던 [[녹말|g]] 좀 줘봐.", time:"오후 2:04"},
- {w:"chloro",t:"ㅇㄴ 지금 해떠서 열일하고 있는데;", time:"오후 2:04"},
- {w:"mito",  t:"밤에는 쉬면서 말 많누", time:"오후 2:05"},
- {w:"chloro",t:"ㅋㅋ 맞네 쏘리요.", time:"오후 2:04"},
- {w:"chloro",t:"여기 [[포도당|g]]이랑 [[녹말|g]].", time:"오후 2:04"},
- {w:"cell",  t:"아 ㅋㅋ 굿. 야 [[포도당|g]] 가져왔어", time:"오후 2:05"},
- {w:"mito",  t:"ㅇㅋ 이제 [[ATP|b]]로 만들어줄게. 야 근데 [[ATP|b]]로 바꿀라면, [[산소|y]]도 필요한디?", time:"오후 2:05"},
- {w:"cell",  t:"아 [[산소|y]] 그거 [[엽록체|g]]가 [[광합성|g]]하면서 만들어진 것도 떠다니고, [[기공|y]]에서 들어온 것도 떠다니잖아 ㅋㅌㅋ", time:"오후 2:06"},
- {w:"mito",  t:"아 맞네. ㅌㅋㅋㅋ [[산소|y]]는 지나가는거 내가 잡아다 쓸게 ㅋㅌㅋㅋ", time:"오후 2:06"},
- {sys:"뚞딲뚞딲"},
- {w:"mito",  t:"자 여기 [[ATP|b]]! 야 근데, [[ATP|b]] 만들고나니까 [[이산화탄소|y]]랑 [[물|y]]이 남는데 [[엽록체|g]]야 너 [[광합성|g]] 할 때 쓰면 되겠다잉", time:"오후 2:08"},
+ {w:"cell",  t:"아 놔 지금 [[세포분열|y]]도 해야되고, 그거 또 [[성장|y]]까지 시킬라면 [[에너지|y]] 필요한데;", time:"오후 2:03"},
+ {w:"mito",  t:"아 그럼 [[포도당|g]] 나한테 가져오삼", time:"오후 2:03"},
+ {w:"cell",  t:"엽록체야 [[광합성|g]] 하느라 수고가 많다. 지금 만든 [[포도당|g]]이랑 전에 저장했던 [[녹말|g]] 좀 줘봐.", time:"오후 2:04"},
+ {w:"chloro",t:"ㅇㅇ 여기 가져가삼", time:"오후 2:04"},
+ {w:"cell",  t:"야 가져왔어", time:"오후 2:05"},
+ {w:"mito",  t:"ㅇㅋ 이제 [[ATP|y]]로 바꿔줄게. 아! 근데 ATP로 바꿀라면, [[산소|b]]도 필요한디?", time:"오후 2:05"},
+ {w:"cell",  t:"아 산소 그거 엽록체가 광합성하면서 만들어진 것도 떠다니고, [[기공|b]]에서 들어온 것도 떠 다니잖아 ㅋㅌㅋ", time:"오후 2:06"},
+ {w:"mito",  t:"아 맞네. ㅌㅋㅋㅋ 그건 지나가는거 내가 잡아다 쓸게 ㅋㅌㅋㅋ", time:"오후 2:06"},
+ {sys:"뚞딲뚞딲",say:"뚝딱뚝딱 뚝딱뚝딱"},
+ {w:"mito",  t:"자 여기 [[ATP|y]]!!!!!!!! 야 근데, 바꾸고 나니까 [[이산화탄소|o]]랑 [[물|o]]이 남는데 엽록체야 너 광합성 할 때 쓰면 되겠다잉", time:"오후 2:08"},
  {w:"chloro",t:"ㅋㅋㅋㅋ 아놔 또 일시키누 ㅋㅋㅋㅋ", time:"오후 2:08"}
 ];
 
@@ -203,9 +213,78 @@ const btnNext=document.getElementById('next');
 const btnBack=document.getElementById('back');
 const btnAuto=document.getElementById('auto');
 const btnReset=document.getElementById('reset');
+const btnTTS=document.getElementById('tts');
 let shown=0,busy=false,autoTimer=null;
 
 function fmt(t){return t.replace(/\[\[(.+?)\|(.+?)\]\]/g,'<span class="kw $2">$1</span>');}
+
+/* ================= 목소리 ================= */
+const synth=window.speechSynthesis;
+let ttsOn=false, koVoices=[], voiceReady=false;
+const TONE={           // 소기관별 목소리 성격
+  cell:  {pitch:1.00, rate:0.98, vi:0},
+  chloro:{pitch:1.45, rate:1.06, vi:1},
+  mito:  {pitch:0.70, rate:0.94, vi:2}
+};
+
+function loadVoices(){
+  if(!synth)return;
+  const all=synth.getVoices();
+  if(!all.length)return;
+  koVoices=all.filter(v=>(v.lang||'').toLowerCase().startsWith('ko'));
+  if(!koVoices.length)koVoices=all.slice(0,3);
+  voiceReady=true;
+}
+if(synth){loadVoices();synth.addEventListener('voiceschanged',loadVoices);}
+
+function cleanForSpeech(t){
+  return t
+    .replace(/\[\[(.+?)\|.+?\]\]/g,'$1')
+    .replace(/ATP/g,'에이티피')
+    .replace(/ㅇㅋ/g,'오케이')
+    .replace(/ㅇㅇ/g,'응응')
+    .replace(/[ㅋㅌㅎ]{2,}/g,' 하하 ')
+    .replace(/([!?])\1+/g,'$1')
+    .replace(/[;~]/g,' ')
+    .replace(/[\u3131-\u314E\u314F-\u3163]/g,'')
+    .replace(/\s+/g,' ').trim();
+}
+
+function stopSpeech(){
+  if(synth)synth.cancel();
+  document.querySelectorAll('.row.speaking').forEach(e=>e.classList.remove('speaking'));
+}
+
+function speak(m,onend){
+  if(!ttsOn||!synth){onend&&onend();return;}
+  const raw=m.sys?(m.say||m.sys):m.t;
+  const txt=cleanForSpeech(raw);
+  if(!txt){onend&&onend();return;}
+  const u=new SpeechSynthesisUtterance(txt);
+  u.lang='ko-KR';
+  const tone=m.w?TONE[m.w]:{pitch:1,rate:1,vi:0};
+  u.pitch=tone.pitch; u.rate=tone.rate; u.volume=1;
+  if(koVoices.length)u.voice=koVoices[tone.vi % koVoices.length];
+  const row=feed.lastElementChild;
+  if(row&&row.classList.contains('row'))row.classList.add('speaking');
+  let done=false,started=false;
+  const finish=()=>{if(done)return;done=true;
+    if(row&&row.classList)row.classList.remove('speaking');onend&&onend();};
+  u.onstart=()=>{started=true;};
+  u.onend=finish; u.onerror=finish;
+  setTimeout(()=>{try{synth.speak(u);}catch(e){finish();}},60);
+  // 음성 엔진이 실제로 시작되지 않으면 즉시 다음으로
+  setTimeout(()=>{if(!started&&!synth.speaking)finish();},650);
+  // 최대 대기 시간 (엔진이 끝을 알려주지 않는 경우 대비)
+  setTimeout(finish, 2500+txt.length*180);
+}
+
+const toast=document.getElementById('toast');
+let toastT=null;
+function showToast(msg){
+  toast.textContent=msg;toast.classList.add('show');
+  clearTimeout(toastT);toastT=setTimeout(()=>toast.classList.remove('show'),4200);
+}
 function scrollEnd(){feed.scrollTop=feed.scrollHeight;}
 
 function addMsg(m){
@@ -239,28 +318,67 @@ function applyState(){
   btnNext.disabled=shown>=SCRIPT.length;
   btnNext.textContent=shown>=SCRIPT.length?'대화 끝 ✓':(shown===0?'대화 시작 ▶':'다음 메시지 ▶');
 }
-function next(){
+function next(cb){
   if(busy||shown>=SCRIPT.length)return;
+  stopSpeech();
   busy=true;const m=SCRIPT[shown];
-  typing(m,()=>{addMsg(m);shown++;applyState();busy=false;if(shown>=SCRIPT.length)stopAuto();});
+  typing(m,()=>{
+    addMsg(m);shown++;applyState();busy=false;
+    speak(m,()=>{if(shown>=SCRIPT.length&&!autoOn)stopAuto();cb&&cb();});
+  });
 }
 function back(){
   if(busy||shown===0)return;
-  stopAuto();feed.removeChild(feed.lastElementChild);shown--;applyState();scrollEnd();
+  stopAuto();stopSpeech();
+  feed.removeChild(feed.lastElementChild);shown--;applyState();scrollEnd();
 }
 function reset(){
-  stopAuto();
+  stopAuto();stopSpeech();
   feed.innerHTML='<div class="daypill">광합성과 세포호흡</div>';
   shown=0;busy=false;applyState();
 }
-function stopAuto(){clearInterval(autoTimer);autoTimer=null;btnAuto.classList.remove('on');btnAuto.textContent='자동';}
+
+let autoOn=false;
+function stopAuto(){
+  autoOn=false;clearTimeout(autoTimer);autoTimer=null;
+  btnAuto.classList.remove('on');btnAuto.textContent='자동';
+}
+function autoStep(){
+  if(!autoOn)return;
+  if(shown>=SCRIPT.length){stopAuto();return;}
+  next(()=>{
+    if(!autoOn)return;
+    if(shown>=SCRIPT.length){stopAuto();return;}
+    autoTimer=setTimeout(autoStep, ttsOn?700:2200);
+  });
+}
 function toggleAuto(){
-  if(autoTimer){stopAuto();return;}
-  btnAuto.classList.add('on');btnAuto.textContent='정지';next();
-  autoTimer=setInterval(()=>{shown>=SCRIPT.length?stopAuto():next();},2600);
+  if(autoOn){stopAuto();return;}
+  autoOn=true;btnAuto.classList.add('on');btnAuto.textContent='정지';autoStep();
 }
 
-btnNext.onclick=next;btnBack.onclick=back;btnReset.onclick=reset;btnAuto.onclick=toggleAuto;
+/* 소리 켜기/끄기 */
+function toggleTTS(){
+  if(!synth){showToast('이 브라우저는 음성 읽기를 지원하지 않습니다. 크롬이나 엣지에서 열어 주세요.');return;}
+  ttsOn=!ttsOn;
+  btnTTS.classList.toggle('on',ttsOn);
+  btnTTS.textContent=(ttsOn?'🔊':'🔇')+' 소리';
+  if(ttsOn){
+    loadVoices();
+    if(!koVoices.length||!koVoices.some(v=>(v.lang||'').toLowerCase().startsWith('ko'))){
+      showToast('한국어 음성을 찾지 못했습니다. 윈도우 설정 → 시간 및 언어 → 음성에서 한국어 음성을 추가하면 자연스럽게 읽어 줍니다.');
+    }else{
+      showToast('소리 켜짐 — 소기관마다 목소리 높낮이가 다릅니다.');
+    }
+    const last=SCRIPT[shown-1];
+    if(last)speak(last);
+  }else{
+    stopSpeech();
+  }
+}
+
+btnNext.onclick=()=>next();btnBack.onclick=back;btnReset.onclick=reset;
+btnAuto.onclick=toggleAuto;btnTTS.onclick=toggleTTS;
 feed.onclick=()=>{if(drawerOpen())return;stopAuto();next();};
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'&&drawerOpen()){closeDrawer();return;}
@@ -288,7 +406,7 @@ const dlist=document.getElementById('dlist');
 })();
 
 function openDrawer(){drawer.classList.add('open');scrim.classList.add('open');
-  drawer.setAttribute('aria-hidden','false');stopAuto();
+  drawer.setAttribute('aria-hidden','false');stopAuto();stopSpeech();
   document.getElementById('closeDrawer').focus();}
 function closeDrawer(){drawer.classList.remove('open');scrim.classList.remove('open');
   drawer.setAttribute('aria-hidden','true');}
